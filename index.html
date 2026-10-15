@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dice2 — Rolador de Dados para Fichas (D&amp;D e Call of Cthulhu)</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">&#9860;</span>
+    <div>
+      <h1>Dice2</h1>
+      <p data-i18n="app.tagline">Importe fichas em PDF, digitalize em JSON e role dados a partir dos atributos.</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-view="sheets" data-i18n="tab.sheets">Fichas</button>
+      <button class="tab" data-view="roll" data-i18n="tab.roll">Rolagem</button>
+      <button class="tab" data-view="history" data-i18n="tab.history">Histórico</button>
+    </nav>
+    <div class="lang-switch" id="lang-switch" role="group" aria-label="Language">
+      <button class="lang-btn" data-lang="pt" data-i18n="lang.pt">PT</button>
+      <button class="lang-btn" data-lang="en" data-i18n="lang.en">EN</button>
+    </div>
+    <button class="theme-btn" id="theme-toggle" type="button" data-i18n-aria="theme.toggle" aria-label="Toggle theme">
+      <svg class="ic-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"></path></svg>
+      <svg class="ic-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z"></path></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ FICHAS ============ -->
+  <section class="view active" id="view-sheets">
+    <div class="panel">
+      <h2 data-i18n="sheets.importTitle">Importar fichas</h2>
+      <p class="muted" data-i18n-html="sheets.importDesc">Aceita os PDFs preenchíveis (AcroForm) do D&amp;D 5e e do Call of Cthulhu 7e, além de arquivos <code>.json</code> já digitalizados. Tudo é processado no seu navegador, sem servidor.</p>
+      <div class="row">
+        <label class="btn primary">
+          <span data-i18n="common.importPdf">Importar PDF</span>
+          <input type="file" id="file-pdf" accept="application/pdf,.pdf" multiple hidden>
+        </label>
+        <label class="btn">
+          <span data-i18n="common.importJson">Importar JSON</span>
+          <input type="file" id="file-json" accept="application/json,.json" multiple hidden>
+        </label>
+        <button class="btn ghost" id="export-all" data-i18n="common.exportAll">Exportar todas (.json)</button>
+      </div>
+      <div class="dropzone" id="dropzone">
+        <strong data-i18n="sheets.dropStrong">Arraste e solte</strong> <span data-i18n="sheets.dropRest">os PDFs/JSONs aqui</span>
+      </div>
+      <div class="status" id="import-status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="sheets.savedTitle">Fichas salvas</h2>
+        <span class="count" id="sheet-count">0</span>
+      </div>
+      <div class="sheet-list" id="sheet-list"></div>
+      <p class="empty" id="sheet-empty" data-i18n="sheets.noSheets">Nenhuma ficha ainda. Importe um PDF acima.</p>
+    </div>
+  </section>
+
+  <!-- ============ ROLAGEM ============ -->
+  <section class="view" id="view-roll">
+    <div class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="tab.roll">Rolagem</h2>
+        <div class="panel-tools">
+          <select id="sheet-select" class="select"></select>
+          <button class="btn small ghost" id="edit-toggle" type="button" data-i18n="editor.toggle">Editar</button>
+        </div>
+      </div>
+
+      <div class="roll-sticky">
+        <div class="last-roll" id="last-roll">
+          <span class="muted" data-i18n="roll.selectPrompt">Escolha uma ficha e clique em um atributo para rolar.</span>
+        </div>
+        <div class="dice-tray" id="dice-tray" hidden aria-hidden="true"></div>
+      </div>
+
+      <div class="quick-dice">
+        <span class="qd-title" data-i18n="section.quickDice">Dados rápidos</span>
+        <div class="qd-set">
+          <label class="qd-field"><input id="qd-qty" class="input" type="number" min="1" max="50" value="1"><span data-i18n="quick.qty">Qtd</span></label>
+          <label class="qd-field"><input id="qd-mod" class="input" type="text" value="" placeholder="+0"><span data-i18n="quick.mod">Mod</span></label>
+        </div>
+        <div class="qd-buttons" id="qd-buttons">
+          <button class="die-btn" data-die="4" type="button">d4</button>
+          <button class="die-btn" data-die="6" type="button">d6</button>
+          <button class="die-btn" data-die="8" type="button">d8</button>
+          <button class="die-btn" data-die="10" type="button">d10</button>
+          <button class="die-btn" data-die="12" type="button">d12</button>
+          <button class="die-btn" data-die="20" type="button">d20</button>
+          <button class="die-btn" data-die="100" type="button">d100</button>
+        </div>
+      </div>
+
+      <div class="search-block">
+        <div class="search-wrap">
+          <span class="search-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.2-3.2"></path></svg></span>
+          <input id="roll-search" class="input search-input" type="text" data-i18n-ph="roll.searchPlaceholder" data-i18n-aria="roll.searchPlaceholder" placeholder="Buscar atributo, perícia, arma…" autocomplete="off" spellcheck="false" aria-label="Buscar atributo para rolar">
+          <kbd class="search-kbd">/</kbd>
+        </div>
+        <div class="chips" id="search-chips" hidden></div>
+        <div class="search-results" id="search-results" hidden></div>
+        <p class="search-hint muted" data-i18n-html="roll.searchHint">Digite para filtrar, use <kbd>↑</kbd>/<kbd>↓</kbd> e <kbd>Enter</kbd> para rolar. Uma expressão como <code>2d6+3</code> também funciona.</p>
+      </div>
+
+      <div class="free-roll">
+        <input id="free-expr" class="input" type="text" data-i18n-ph="roll.freePlaceholder" placeholder="Ex.: 2d6+3, 1d20, 4d6, 1d100" spellcheck="false">
+        <button class="btn primary" id="free-roll-btn" data-i18n="common.roll">Rolar</button>
+      </div>
+
+      <div id="sheet-panel"></div>
+    </div>
+  </section>
+
+  <!-- ============ HISTÓRICO ============ -->
+  <section class="view" id="view-history">
+    <div class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="history.title">Histórico de rolagens</h2>
+        <button class="btn ghost" id="clear-history" data-i18n="common.clear">Limpar</button>
+      </div>
+      <ul class="history" id="history-list"></ul>
+      <p class="empty" id="history-empty" data-i18n="history.empty">Sem rolagens ainda.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span id="storage-warn"></span>
+</footer>
+
+<script src="js/vendor/pdf.min.js"></script>
+<script src="js/vendor/pdf.worker.min.js"></script>
+<script src="js/vendor/pdf-lib.min.js"></script>
+<script src="js/i18n.js"></script>
+<script src="data/examples.js"></script>
+<script src="js/mapper.js"></script>
+<script src="js/dice.js"></script>
+<script src="js/store.js"></script>
+<script src="js/pdfimport.js"></script>
+<script src="js/pdfexport.js"></script>
+<script src="js/diceanim.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
