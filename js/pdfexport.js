@@ -47,9 +47,58 @@
     });
   }
 
+  // Blank fillable templates bundled with the app, used to create a PDF for
+  // sheets that have no imported original (e.g. the blank starter templates).
+  var TEMPLATES = {
+    dnd: "assets/templates/dnd-5e.pdf",
+    coc: "assets/templates/coc-7e.pdf"
+  };
+  var templateCache = {};
+
+  function hasTemplate(system) {
+    return !!TEMPLATES[system];
+  }
+
+  function loadTemplate(system) {
+    return new Promise(function (resolve, reject) {
+      if (!hasTemplate(system)) { reject(new Error("template-missing")); return; }
+      if (templateCache[system]) { resolve(templateCache[system]); return; }
+      if (typeof root.fetch !== "function") { reject(new Error("fetch-unavailable")); return; }
+      root.fetch(TEMPLATES[system]).then(function (res) {
+        if (!res.ok) throw new Error("template-http-" + res.status);
+        return res.arrayBuffer();
+      }).then(function (buf) {
+        templateCache[system] = buf;
+        resolve(buf);
+      }, reject);
+    });
+  }
+
+  function buildFromTemplate(sheet) {
+    return loadTemplate(sheet.system).then(function (bytes) {
+      return build(sheet, bytes);
+    });
+  }
+
+  // Uses the sheet's stored PDF when available, otherwise falls back to the
+  // bundled blank template for its system.
+  function resolveBytes(sheet) {
+    var stored = (root.Store && root.Store.getPdf)
+      ? root.Store.getPdf(sheet.id)
+      : Promise.resolve(null);
+    return Promise.resolve(stored).then(function (bytes) {
+      if (bytes) return bytes;
+      return loadTemplate(sheet.system);
+    });
+  }
+
   root.PdfExport = {
     isAvailable: isAvailable,
     setField: setField,
-    build: build
+    build: build,
+    hasTemplate: hasTemplate,
+    loadTemplate: loadTemplate,
+    buildFromTemplate: buildFromTemplate,
+    resolveBytes: resolveBytes
   };
 })(typeof window !== "undefined" ? window : this);

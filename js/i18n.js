@@ -43,6 +43,7 @@
 
       "section.abilities": "Atributos",
       "section.characteristics": "Atributos",
+      "section.identity": "Identidade",
       "section.vitality": "Vitalidade",
       "section.quick": "Testes rápidos",
       "section.saves": "Testes de Resistência",
@@ -177,6 +178,7 @@
       "status.pdfMissing": "PDF original não encontrado (reenvie o PDF para poder exportar).",
       "status.pdfUnavailable": "Biblioteca de PDF não carregada.",
       "status.pdfError": "Falha ao gerar PDF: {err}",
+      "status.pdfTemplateError": "Não foi possível carregar o modelo de PDF do sistema ({err}). Abra o app pelo link publicado (GitHub Pages) para usar este recurso.",
       "status.nothingExport": "Nenhuma ficha para exportar.",
       "status.invalidExpr": "Expressão inválida",
       "status.storageWarn": "Aviso: armazenamento local indisponível neste navegador; as fichas ficarão apenas na memória desta aba.",
@@ -227,6 +229,7 @@
 
       "section.abilities": "Abilities",
       "section.characteristics": "Characteristics",
+      "section.identity": "Identity",
       "section.vitality": "Vitals",
       "section.quick": "Quick rolls",
       "section.saves": "Saving Throws",
@@ -361,6 +364,7 @@
       "status.pdfMissing": "Original PDF not found (re-import the PDF to export).",
       "status.pdfUnavailable": "PDF library not loaded.",
       "status.pdfError": "Failed to generate PDF: {err}",
+      "status.pdfTemplateError": "Could not load the system PDF template ({err}). Open the app from the published link (GitHub Pages) to use this feature.",
       "status.nothingExport": "No sheets to export.",
       "status.invalidExpr": "Invalid expression",
       "status.storageWarn": "Warning: local storage is unavailable in this browser; sheets will live only in this tab's memory.",

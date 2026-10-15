@@ -255,6 +255,25 @@
     { field: "custom_4", name: "Personalizada", nameField: "custom_4_name" }
   ];
 
+  // Starting (rulebook) values for Call of Cthulhu 7e skills.
+  var COC_SKILL_BASE = {
+    accounting: 5, anthropology: 1, appraise: 5, archaeology: 1,
+    art_craft_1: 5, art_craft_2: 5, charm: 15, climb: 20,
+    credit_rating: 0, cthulhu_mythos: 0, disguise: 5, dodge: 0,
+    drive_auto: 20, electrical_repair: 10, fast_talk: 5,
+    fighting_brawl: 25, fighting_1: 0, fighting_2: 0,
+    firearms_handgun: 20, firearms_rifle_shotgun: 25, firearms_1: 0,
+    first_aid: 30, history: 5, intimidate: 15, jump: 20,
+    language_other_1: 1, language_other_2: 1, language_other_3: 1, language_own: 0,
+    law: 5, library_use: 20, listen: 20, locksmith: 1,
+    mechanical_repair: 10, medicine: 1, natural_world: 10, navigate: 10,
+    occult: 5, persuade: 10, pilot: 1, psychoanalysis: 1, psychology: 10,
+    ride: 5, science_1: 1, science_2: 1, science_3: 1,
+    sleight_of_hand: 10, spot_hidden: 25, stealth: 20, survival: 10,
+    swim: 20, throw: 20, track: 10,
+    custom_1: 0, custom_2: 0, custom_3: 0, custom_4: 0
+  };
+
   function mapCoc(raw) {
     var r = normalizeRaw(raw);
 
@@ -383,6 +402,11 @@
 
   function dndToRaw(data) {
     var out = {};
+    if (data.name != null) {
+      out["CharacterName"] = String(data.name);
+      out["CharacterName 2"] = String(data.name);
+    }
+    if (data.initiative != null) out["Initiative"] = String(data.initiative);
     (data.abilities || []).forEach(function (ab, i) {
       var def = DND_ABILITIES[i];
       if (!def) return;
@@ -422,6 +446,7 @@
 
   function cocToRaw(data) {
     var out = {};
+    if (data.name != null) out["investigator_name"] = String(data.name);
     (data.characteristics || []).forEach(function (c, i) {
       var def = COC_CHARS[i];
       if (!def) return;
@@ -489,12 +514,93 @@
     };
   }
 
+  function blankDnd() {
+    return {
+      system: "dnd",
+      name: "",
+      abilities: DND_ABILITIES.map(function (a) {
+        return { key: a.key, name: a.name, abbr: a.abbr, score: null, mod: 0 };
+      }),
+      profBonus: null,
+      ac: null,
+      initiative: null,
+      speed: "",
+      hp: { max: null, current: null, temp: null },
+      hitDice: "",
+      passive: null,
+      saves: DND_SAVES.map(function (s) {
+        return { field: s.field, name: s.name, ability: s.ability, bonus: null };
+      }),
+      skills: DND_SKILLS.map(function (s) {
+        return { field: s.field, name: s.name, ability: s.ability, bonus: null };
+      }),
+      weapons: [],
+      spell: null,
+      details: {
+        classLevel: "", race: "", background: "", alignment: "", player: "",
+        xp: "", inspiration: "", personalityTraits: "", ideals: "", bonds: "",
+        flaws: "", features: "", proficiencies: "", equipment: "", gp: ""
+      }
+    };
+  }
+
+  function blankCoc() {
+    return {
+      system: "coc",
+      name: "",
+      characteristics: COC_CHARS.map(function (c) {
+        return { key: c.key, name: c.name, abbr: c.abbr, value: null, half: null, fifth: null };
+      }),
+      attributes: {
+        hpMax: null, hpCurrent: null, mpMax: null, mpCurrent: null,
+        luckStart: null, luck: null, sanityStart: null, sanity: null, sanityMax: null,
+        move: null, build: null, damageBonus: "",
+        flags: {
+          temporaryInsanity: false, indefiniteInsanity: false, majorWound: false,
+          unconscious: false, dying: false
+        }
+      },
+      skills: COC_SKILLS.map(function (s) {
+        var base = COC_SKILL_BASE[s.field] || 0;
+        return {
+          field: s.field,
+          name: s.name,
+          base: s.name,
+          value: base,
+          half: Math.floor(base / 2),
+          fifth: Math.floor(base / 5),
+          checked: false
+        };
+      }),
+      weapons: [],
+      details: { occupation: "", age: "", birthplace: "", residence: "", gender: "" }
+    };
+  }
+
+  function blankSheet(system, meta) {
+    meta = meta || {};
+    var now = new Date().toISOString();
+    var data = system === "coc" ? blankCoc() : blankDnd();
+    return {
+      id: meta.id || uid(),
+      system: system,
+      name: meta.name || data.name || "Ficha em branco",
+      source: meta.source || null,
+      createdAt: meta.createdAt || now,
+      updatedAt: meta.updatedAt || meta.createdAt || now,
+      data: data,
+      raw: {}
+    };
+  }
+
   return {
     detectSystem: detectSystem,
     mapSheet: mapSheet,
     mapDnd: mapDnd,
     mapCoc: mapCoc,
     buildSheet: buildSheet,
+    blankSheet: blankSheet,
+    cocSkillBase: COC_SKILL_BASE,
     toRaw: toRaw,
     slug: slug,
     uid: uid,

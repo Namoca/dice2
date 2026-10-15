@@ -470,7 +470,7 @@
         '<div class="actions">' +
         '<button class="btn small primary" data-act="select">' + esc(t("common.roll")) + "</button>" +
         '<button class="btn small" data-act="export">' + esc(t("common.exportJson")) + "</button>" +
-        (s.hasPdf ? '<button class="btn small" data-act="export-pdf">' + esc(t("common.exportPdf")) + "</button>" : "") +
+        (s.hasPdf || (typeof PdfExport !== "undefined" && PdfExport.hasTemplate(s.system)) ? '<button class="btn small" data-act="export-pdf">' + esc(t("common.exportPdf")) + "</button>" : "") +
         '<button class="btn small danger" data-act="remove">' + esc(t("common.remove")) + "</button>" +
         "</div></div>";
     }).join("");
@@ -845,6 +845,10 @@
     var h = [];
     h.push('<p class="muted editor-hint">' + esc(t("editor.hint")) + "</p>");
 
+    h.push('<div class="section-title">' + esc(t("section.identity")) + '</div><div class="edit-grid">');
+    h.push(editText(t("word.name"), "name", d.name));
+    h.push("</div>");
+
     h.push('<div class="section-title">' + esc(t("section.abilities")) + '</div><div class="edit-grid">');
     d.abilities.forEach(function (a, i) {
       h.push(editField(a.abbr + " · " + I18n.abilityName("dnd", a), "abilities." + i + ".score", a.score,
@@ -899,6 +903,10 @@
     var d = sheet.data;
     var h = [];
     h.push('<p class="muted editor-hint">' + esc(t("editor.hint")) + "</p>");
+
+    h.push('<div class="section-title">' + esc(t("section.identity")) + '</div><div class="edit-grid">');
+    h.push(editText(t("word.name"), "name", d.name));
+    h.push("</div>");
 
     h.push('<div class="section-title">' + esc(t("section.characteristics")) + '</div><div class="edit-grid">');
     d.characteristics.forEach(function (c, i) {
@@ -1094,6 +1102,14 @@
     }
     setPath(sheet.data, field, v);
     if (!isText) recomputeDerived(sheet, field);
+    if (field === "name") {
+      sheet.name = (v && String(v).trim()) ? String(v).trim() : sheet.name;
+      Store.update(sheet.id, { name: sheet.name, data: sheet.data });
+      renderSheets();
+      renderSheetSelect();
+      if (state.editMode) renderRollPanel();
+      return;
+    }
     Store.update(sheet.id, { data: sheet.data });
     if (state.editMode) renderRollPanel();
   }
@@ -1136,14 +1152,14 @@
       return;
     }
     setStatus(t("status.pdfWorking"));
-    Store.getPdf(sheet.id).then(function (bytes) {
+    PdfExport.resolveBytes(sheet).then(function (bytes) {
       if (!bytes) { setStatus(t("status.pdfMissing"), "err"); return; }
       return PdfExport.build(sheet, bytes).then(function (out) {
         Store.downloadBlob(SheetMapper.slug(sheet.name) + ".pdf", new Blob([out], { type: "application/pdf" }));
         setStatus(t("status.pdfExported"), "ok");
       });
     }).catch(function (err) {
-      setStatus(t("status.pdfError", { err: err.message }), "err");
+      setStatus(t("status.pdfTemplateError", { err: err.message }), "err");
     });
   }
 
