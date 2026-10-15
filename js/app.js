@@ -1443,4 +1443,10 @@
   }
 
   document.addEventListener("DOMContentLoaded", init);
+
+  window.Dice2App = {
+    showView: showView,
+    refresh: refresh,
+    selectSheet: selectSheet
+  };
 })();
